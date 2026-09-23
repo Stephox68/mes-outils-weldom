@@ -70,6 +70,61 @@
   td.pnat.neg{color:#c98a86;font-weight:600;font-style:italic}
   footer{padding:14px 26px;color:#8a97a3;font-size:11.5px;border-top:1px solid var(--line)}
   @media(max-width:640px){.prod{max-width:150px}th,td{padding:5px 6px;font-size:11px}}
+  /* ===== MOBILE : tableau -> cartes empilées (sous 720px) ===== */
+  @media (max-width:720px){
+    header{padding:18px 14px 14px}
+    h1{font-size:22px}
+    .progline{font-size:16px;line-height:1.4}
+    .progline .nat{display:block;font-size:13px;margin-top:2px}
+    .controls,.wrap{padding-left:10px;padding-right:10px}
+    .mag-tabs{flex-wrap:wrap}
+    .mag-tabs button{flex:1 1 40%;padding:10px 8px}
+    .counts{gap:8px}
+    .pill{font-size:12px}
+    /* masquer l'entête de tableau */
+    #tbl thead{display:none}
+    #tbl,#tbl tbody,#tbl tr,#tbl td{display:block;width:auto}
+    #tbl tr{
+      border:1px solid var(--line);border-radius:10px;margin:0 0 12px;
+      background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;
+    }
+    #tbl tr:nth-child(even) td{background:#fff}
+    /* le badge priorité en bandeau haut de carte */
+    #tbl td.badge{
+      text-align:center;font-size:13px;padding:8px 12px;border:0;
+      border-radius:0;line-height:1.3;
+    }
+    /* les autres cellules : label à gauche, valeur à droite */
+    #tbl td:not(.badge){
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      text-align:right;border:0;border-top:1px solid #eee;padding:8px 12px;font-size:13px;
+    }
+    #tbl td:not(.badge)::before{
+      content:attr(data-label);color:#5b6b7a;font-weight:600;text-align:left;
+      font-size:12px;text-transform:none;letter-spacing:0;flex:0 0 auto;
+    }
+    #tbl td.prod{font-weight:600}
+    /* cellules badge de la vue GROUPE : label magasin à gauche, badge coloré à droite */
+    #tbl td.grpcell{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      color:#12263a;background:#fff !important;border-top:1px solid #eee;
+      padding:8px 12px;text-transform:none;font-size:12px;
+    }
+    #tbl td.grpcell::before{
+      content:attr(data-label);color:#5b6b7a;font-weight:600;font-size:12px;flex:0 0 auto;
+    }
+    #tbl td.grpcell.b-r{border-left:5px solid var(--rupture)}
+    #tbl td.grpcell.b-f{border-left:5px solid var(--faible)}
+    #tbl td.grpcell.b-i{border-left:5px solid var(--impl)}
+    #tbl td.grpcell.b-e{border-left:5px solid var(--recul)}
+    #tbl td.grpcell .camag{font-weight:700;color:#12263a}
+    #tbl td.code{text-decoration:underline;text-decoration-style:dotted}
+    /* stock coloré : garde le fond mais en pastille compacte */
+    #tbl td.stock.r,#tbl td.stock.f,#tbl td.stock.i{color:inherit;background:#fff;font-weight:700}
+    #tbl td.stock.r::after,#tbl td.stock.f::after,#tbl td.stock.i::after{content:""}
+    /* footer plus compact */
+    footer{padding:12px 14px;font-size:11px}
+  }
 </style>
 </head>
 <body>
@@ -271,16 +326,16 @@ function render(){
     const progCls = (r.prog_mag!==null&&r.prog_mag<0)?"neg":"";
     const progNatCls = (r.prog_nat!==null&&r.prog_nat<0)?"neg":"";
     tr.innerHTML =
-      `<td class="badge ${r.bcls}">${r.badge}</td>`+
-      `<td>${r.rang}</td>`+
-      `<td class="code" data-code="${r.code}" title="Cliquer pour copier">${r.code}</td>`+
-      `<td class="prod">${r.nom}</td>`+
-      `<td>${fmtEuro(r.ca_nat)}</td>`+
-      `<td class="camagcol">${fmtEuro(r.ca_mag)}</td>`+
-      `<td class="${stockCls}">${fmtStock(r.stock)}</td>`+
-      `<td>${r.situation}</td>`+
-      `<td class="${progCls}">${fmtProg(r.prog_mag)}</td>`+
-      `<td class="pnat ${progNatCls}">${fmtProg(r.prog_nat)}</td>`;
+      `<td class="badge ${r.bcls}" data-label="Priorité">${r.badge}</td>`+
+      `<td data-label="Rang nat.">${r.rang}</td>`+
+      `<td class="code" data-code="${r.code}" data-label="Code" title="Cliquer pour copier">${r.code}</td>`+
+      `<td class="prod" data-label="Produit">${r.nom}</td>`+
+      `<td data-label="CA nat.">${fmtEuro(r.ca_nat)}</td>`+
+      `<td class="camagcol" data-label="CA mag.">${fmtEuro(r.ca_mag)}</td>`+
+      `<td class="${stockCls}" data-label="Stock">${fmtStock(r.stock)}</td>`+
+      `<td data-label="Situation">${r.situation}</td>`+
+      `<td class="${progCls}" data-label="Prog mag.">${fmtProg(r.prog_mag)}</td>`+
+      `<td class="pnat ${progNatCls}" data-label="Prog nat.">${fmtProg(r.prog_nat)}</td>`;
     body.appendChild(tr);
   });
 }
@@ -326,12 +381,12 @@ function renderGroupe(){
   flops.forEach(f=>{
     const tr=document.createElement("tr");
     let cells =
-      `<td>${f.rang}</td>`+
-      `<td class="code" data-code="${f.code}" title="Cliquer pour copier">${f.code}</td>`+
-      `<td class="prod">${f.nom}</td>`+
-      `<td>${fmtEuro(f.ca_nat)}</td>`;
-    f.parMag.forEach(r=>{
-      cells += `<td class="badge ${r.bcls}" title="Stock ${fmtStock(r.stock)} · Prog ${fmtProg(r.prog_mag)}">${r.badge}<br><span class="camag">${fmtEuro(r.ca_mag)}</span></td>`;
+      `<td data-label="Rang nat.">${f.rang}</td>`+
+      `<td class="code" data-code="${f.code}" data-label="Code" title="Cliquer pour copier">${f.code}</td>`+
+      `<td class="prod" data-label="Produit">${f.nom}</td>`+
+      `<td data-label="CA nat.">${fmtEuro(f.ca_nat)}</td>`;
+    f.parMag.forEach((r,idx)=>{
+      cells += `<td class="badge grpcell ${r.bcls}" data-label="${mags[idx]}" title="Stock ${fmtStock(r.stock)} · Prog ${fmtProg(r.prog_mag)}">${r.badge}<br><span class="camag">${fmtEuro(r.ca_mag)}</span></td>`;
     });
     tr.innerHTML = cells;
     body.appendChild(tr);
