@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan d'action tract 6U — par magasin</title>
+<style>
+  :root{
+    --ink:#12263a; --paper:#fbfaf7; --line:#dcd7cf;
+    --rupture:#b21f2d; --rupture-bg:#fdecee;
+    --faible:#e8871e; --faible-bg:#fdf0dd;
+    --impl:#c8641a; --impl-bg:#fdefe2;
+    --recul:#c0392b; --recul-bg:#fdeae7;
+    --suivi:#7a6410; --suivi-bg:#fbf3d6;
+    --head:#12263a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.4}
+  header{padding:30px 26px 24px;border-bottom:2px solid var(--ink);text-align:center}
+  h1{margin:0;font-size:34px;letter-spacing:-.01em}
+  .progline{margin-top:14px;font-size:24px;font-weight:700}
+  .progline .mag{color:var(--ink)}
+  .progline .up{color:#1e7a34}
+  .progline .down{color:var(--rupture)}
+  .progline .nat{color:#5b6b7a;font-size:18px;font-weight:600}
+  .controls{display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap;padding:16px 26px;background:#f2efe8;border-bottom:1px solid var(--line)}
+  .ctl label{display:block;font-size:11px;color:#5b6b7a;margin-bottom:4px}
+  .mag-tabs{display:flex;gap:0;border:1px solid var(--ink);border-radius:7px;overflow:hidden}
+  .mag-tabs button{border:0;background:#fff;padding:9px 18px;font-size:14px;cursor:pointer;font-weight:600;color:var(--ink);border-right:1px solid var(--line)}
+  .mag-tabs button:last-child{border-right:0}
+  .mag-tabs button.active{background:var(--ink);color:#fff}
+  .mag-tabs button.grp{font-weight:800;color:#b21f2d}
+  .mag-tabs button.grp.active{background:#b21f2d;color:#fff}
+  .counts{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px}
+  .pill{padding:4px 10px;border-radius:20px;font-weight:600;cursor:pointer;user-select:none;border:2px solid transparent;transition:transform .05s}
+  .pill:hover{transform:translateY(-1px)}
+  .pill.on{border-color:currentColor;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+  .pill.all{background:#e7e2d9;color:#4a4034}
+  .pill.r{background:var(--rupture-bg);color:var(--rupture)}
+  .pill.f{background:var(--faible-bg);color:var(--faible)}
+  .pill.i{background:var(--impl-bg);color:var(--impl)}
+  .pill.e{background:var(--recul-bg);color:var(--recul)}
+  .pill.s{background:var(--suivi-bg);color:var(--suivi)}
+  .pill.c{background:#d7f0dd;color:#1e7a34}
+  .pill.n{background:#f7ecc9;color:#8a6d00}
+  .wrap{padding:8px 20px 60px}
+  table{border-collapse:collapse;width:100%;background:#fff;font-variant-numeric:tabular-nums}
+  th,td{padding:7px 10px;border:1px solid var(--line);text-align:center}
+  th{background:var(--head);color:#fff;position:sticky;top:0;cursor:pointer;user-select:none;font-size:12px;white-space:nowrap}
+  th:hover{background:#1d3a56}
+  th .arr{opacity:.5;font-size:10px;margin-left:3px}
+  td.prod{text-align:left;max-width:280px}
+  td.badge{font-weight:700;color:#fff;font-size:10.5px;letter-spacing:.04em;line-height:1.25;text-transform:uppercase}
+  td.badge .camag{font-size:11px;font-weight:600;opacity:.92;text-transform:none;letter-spacing:0}
+  .b-r{background:var(--rupture)} .b-i{background:var(--impl)} .b-f{background:var(--faible)}
+  .b-e{background:var(--recul);color:#fff} .b-s{background:var(--suivi);color:#fff}
+  .b-c{background:#1e7a34;color:#fff}
+  .b-n{background:#b08900;color:#fff}
+  td.stock.r{background:var(--rupture);color:#fff;font-weight:700}
+  td.stock.f{background:var(--faible);color:#fff;font-weight:700}
+  td.stock.i{background:var(--impl);color:#fff;font-weight:700}
+  tr:nth-child(even) td:not(.badge):not(.stock){background:#faf9f6}
+  td.code{cursor:pointer;font-weight:600;color:#12263a;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
+  td.code:hover{background:#e8eef4}
+  td.code.copied{background:#c6efce;color:#006100;text-decoration:none}
+  .neg{color:var(--rupture);font-weight:600}
+  td.pnat{color:#7a8794;font-style:italic}
+  td.camagcol{font-weight:700;color:#12263a}
+  td.pnat.neg{color:#c98a86;font-weight:600;font-style:italic}
+  footer{padding:14px 26px;color:#8a97a3;font-size:11.5px;border-top:1px solid var(--line)}
+  @media(max-width:640px){.prod{max-width:150px}th,td{padding:5px 6px;font-size:11px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Plan d'action tract</h1>
+  <div id="progline" class="progline"></div>
+</header>
+<div class="controls">
+  <div class="ctl">
+    <label>Magasin</label>
+    <div class="mag-tabs" id="tabs"></div>
+  </div>
+  <div class="ctl">
+    <label>Répartition des alertes</label>
+    <div class="counts" id="counts"></div>
+  </div>
+</div>
+<div class="wrap">
+  <table id="tbl">
+    <thead><tr id="head"></tr></thead>
+    <tbody id="body"></tbody>
+  </table>
+</div>
+<footer>Verdict sur la progression magasin vs seuil national. « Rang nat. » = position par CA national.
+Stock 0 = rupture, stock 1–2 = stock faible. Données lues depuis l'export Booster (Top 50 CA national).</footer>
+
+<script>
+const DATA = {"Hesingue": [{"code": "94612187", "nom": "Beton Carbone Reduit 25+5kg", "ca_nat": 35421.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 1}, {"code": "5649478", "nom": "Terreau Universel Geolia 50l", "ca_nat": 34745.0, "prog_nat": 92.1, "ca_mag": 186.0, "prog_mag": 72.3, "stock": 93.0, "rang": 2}, {"code": "87909637", "nom": "Str Int 10mm wr Orito2 1,74", "ca_nat": 34236.0, "prog_nat": 642.9, "ca_mag": 0.0, "prog_mag": null, "stock": 81.0, "rang": 3}, {"code": "5594347", "nom": "Poele Petrole Electroni 2,85kw", "ca_nat": 31770.0, "prog_nat": 189.5, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 4}, {"code": "96058796", "nom": "Aspi Eau Poussiere 25l Dexter", "ca_nat": 26704.0, "prog_nat": null, "ca_mag": 99.0, "prog_mag": null, "stock": 6.0, "rang": 5}, {"code": "5631287", "nom": "Plaque Platre Ba13 nf 250x120", "ca_nat": 24369.0, "prog_nat": 119.0, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 6}, {"code": "87651752", "nom": "Nettoyeur hp St3 150 Bars", "ca_nat": 19948.0, "prog_nat": 275.6, "ca_mag": 191.0, "prog_mag": null, "stock": 2.0, "rang": 7}, {"code": "86360427", "nom": "Etagere Metal Bois 90x180x40", "ca_nat": 19491.0, "prog_nat": 108.4, "ca_mag": 0.0, "prog_mag": null, "stock": 7.0, "rang": 8}, {"code": "94612186", "nom": "Mortier Montage 25+5kg", "ca_nat": 18144.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 9}, {"code": "5597051", "nom": "Escabeau 5 Marches Selekta", "ca_nat": 15740.0, "prog_nat": 117.0, "ca_mag": 119.0, "prog_mag": 33.3, "stock": 4.0, "rang": 10}, {"code": "98586931", "nom": "Psf+meuleuse Essential 1x4ah", "ca_nat": 14930.0, "prog_nat": null, "ca_mag": 100.0, "prog_mag": null, "stock": 3.0, "rang": 11}, {"code": "93179702", "nom": "Coffre Resine Ashwood 570l", "ca_nat": 13361.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 12}, {"code": "87928058", "nom": "Reglette Led 2xt8 3600lm Ip65", "ca_nat": 13129.0, "prog_nat": 130.1, "ca_mag": 119.0, "prog_mag": null, "stock": 14.0, "rang": 13}, {"code": "91294483", "nom": "Radiateur in Se Tectonia 1000w", "ca_nat": 13125.0, "prog_nat": 76.2, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 14}, {"code": "91294484", "nom": "Radiateur in Se Tectonia 1500w", "ca_nat": 12726.0, "prog_nat": 30.4, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 15}, {"code": "91294485", "nom": "Radiateur in Se Tectonia 2000w", "ca_nat": 12490.0, "prog_nat": 103.9, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 16}, {"code": "93840028", "nom": "Ponceuse Excent 420w Dexter", "ca_nat": 12176.0, "prog_nat": null, "ca_mag": 35.0, "prog_mag": null, "stock": 2.0, "rang": 17}, {"code": "1086606", "nom": "Echafaudage Alu Hobbys Step 4m", "ca_nat": 11976.0, "prog_nat": 253.0, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 18}, {"code": "95332113", "nom": "Enr Brico 25m 3g1,5 Ho5-vvf", "ca_nat": 10283.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 4.0, "rang": 19}, {"code": "90544248", "nom": "Kit Chasse Eau Cable 3/8", "ca_nat": 10191.0, "prog_nat": 72.5, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 20}, {"code": "82945688", "nom": "Deshumidificateur 10l/jour Eq", "ca_nat": 10190.0, "prog_nat": 98.2, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 21}, {"code": "5604243", "nom": "Vmc Auto Luna 2018 Kit", "ca_nat": 8732.0, "prog_nat": 127.8, "ca_mag": 28.0, "prog_mag": null, "stock": 1.0, "rang": 22}, {"code": "98302087", "nom": "Peint Ripolin Mat 12l ed Spec", "ca_nat": 8731.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 23}, {"code": "87210006", "nom": "Secateur 4v 20mm Avec Batterie", "ca_nat": 7896.0, "prog_nat": 437.1, "ca_mag": 0.0, "prog_mag": null, "stock": 6.0, "rang": 24}, {"code": "85372762", "nom": "Lambris Sapn Natl 9x115x2050", "ca_nat": 7817.0, "prog_nat": 29.1, "ca_mag": 0.0, "prog_mag": null, "stock": 6.0, "rang": 25}, {"code": "95870027", "nom": "Radiateur in S Walter2 1000w H", "ca_nat": 7235.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 26}, {"code": "5621274", "nom": "Laine Verre 1m2x200 Th40kr R5m", "ca_nat": 6499.0, "prog_nat": 21.9, "ca_mag": 285.0, "prog_mag": null, "stock": 28.0, "rang": 27}, {"code": "86154215", "nom": "Rideau T/o Ragnar 140x280 Ecru", "ca_nat": 6369.0, "prog_nat": 705.8, "ca_mag": 40.0, "prog_mag": null, "stock": 2.0, "rang": 28}, {"code": "9146787", "nom": "Buchette Filet 40 Litres", "ca_nat": 6337.0, "prog_nat": 55.0, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 29}, {"code": "5601125", "nom": "Isolt Bulle Pte Garage 6m2 Kit", "ca_nat": 6214.0, "prog_nat": 82.4, "ca_mag": 20.0, "prog_mag": null, "stock": 13.0, "rang": 30}, {"code": "84584111", "nom": "Bache Multifonct Mat Bleu 4x5m", "ca_nat": 5711.0, "prog_nat": 106.9, "ca_mag": 17.0, "prog_mag": null, "stock": 14.0, "rang": 31}, {"code": "96886439", "nom": "Rad Bain Huile Blc 2500w Eq", "ca_nat": 5529.0, "prog_nat": null, "ca_mag": 110.0, "prog_mag": null, "stock": 4.0, "rang": 32}, {"code": "84621093", "nom": "Colle Joint Flexpro Blc 300ml", "ca_nat": 5155.0, "prog_nat": 113.5, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 33}, {"code": "1091964", "nom": "Laine Verre pv 8,5x1,20-100mm", "ca_nat": 5148.0, "prog_nat": 33.2, "ca_mag": 0.0, "prog_mag": null, "stock": 15.0, "rang": 34}, {"code": "82816733", "nom": "Vide Cendre 1000w 20l", "ca_nat": 5142.0, "prog_nat": 431.2, "ca_mag": 60.0, "prog_mag": null, "stock": 5.0, "rang": 35}, {"code": "92220950", "nom": "Scie Sauteuse Filaire dx 500 W", "ca_nat": 4968.0, "prog_nat": 98.4, "ca_mag": 19.0, "prog_mag": null, "stock": 2.0, "rang": 36}, {"code": "5625668", "nom": "Bac /pin/rou Kit Mur/plf", "ca_nat": 4805.0, "prog_nat": 56.2, "ca_mag": 19.0, "prog_mag": null, "stock": 8.0, "rang": 37}, {"code": "95554055", "nom": "Buche Calorifique Bois X5", "ca_nat": 4716.0, "prog_nat": 2266.6, "ca_mag": 3.0, "prog_mag": null, "stock": 159.0, "rang": 38}, {"code": "89954133", "nom": "Tube Led T8 120cm 1800lm 4000k", "ca_nat": 4610.0, "prog_nat": -8.9, "ca_mag": 27.0, "prog_mag": -56.7, "stock": 9.0, "rang": 39}, {"code": "93210317", "nom": "Perceuse Percu 900w +access Dx", "ca_nat": 4609.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 5.0, "rang": 40}, {"code": "86154213", "nom": "Rideau T/o Ragnar 140x280 Tpe", "ca_nat": 4386.0, "prog_nat": 416.5, "ca_mag": 0.0, "prog_mag": null, "stock": 4.0, "rang": 41}, {"code": "95601766", "nom": "Enduit Reno Pate 25kg+10%gr", "ca_nat": 4342.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 42}, {"code": "96232238", "nom": "Detecteur de Fumee 1an Kidde", "ca_nat": 4211.0, "prog_nat": null, "ca_mag": 8.0, "prog_mag": null, "stock": 7.0, "rang": 43}, {"code": "92875061", "nom": "Souffleur ss Bat Essential 20v", "ca_nat": 4131.0, "prog_nat": 257.5, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 44}, {"code": "92922944", "nom": "Tronconneuse ss Bat Estl 25cm", "ca_nat": 3874.0, "prog_nat": 225.8, "ca_mag": 0.0, "prog_mag": null, "stock": 4.0, "rang": 45}, {"code": "5630026", "nom": "Bloc Parafoudre 5p+inter 3m Nr", "ca_nat": 3730.0, "prog_nat": 43.8, "ca_mag": 47.0, "prog_mag": null, "stock": 20.0, "rang": 46}, {"code": "8018606", "nom": "Coffre Rgt Baya 420l 1173x548x", "ca_nat": 3567.0, "prog_nat": 615.5, "ca_mag": 135.0, "prog_mag": null, "stock": 2.0, "rang": 47}, {"code": "92908340", "nom": "Batterie wx 4ah +charg Wa3604j", "ca_nat": 3478.0, "prog_nat": 424.1, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 48}, {"code": "96886449", "nom": "Rad Bain Huile 2000w Basic Blc", "ca_nat": 3345.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 12.0, "rang": 49}, {"code": "1075840", "nom": "Gazon Universel Sac 10kg", "ca_nat": 3325.0, "prog_nat": 72.9, "ca_mag": 135.0, "prog_mag": null, "stock": 3.0, "rang": 50}], "Sierentz": [{"code": "94612187", "nom": "Beton Carbone Reduit 25+5kg", "ca_nat": 35421.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 1}, {"code": "5649478", "nom": "Terreau Universel Geolia 50l", "ca_nat": 34745.0, "prog_nat": 92.1, "ca_mag": 73.0, "prog_mag": 37.5, "stock": 66.0, "rang": 2}, {"code": "87909637", "nom": "Str Int 10mm wr Orito2 1,74", "ca_nat": 34236.0, "prog_nat": 642.9, "ca_mag": 156.0, "prog_mag": null, "stock": 15.0, "rang": 3}, {"code": "5594347", "nom": "Poele Petrole Electroni 2,85kw", "ca_nat": 31770.0, "prog_nat": 189.5, "ca_mag": 199.0, "prog_mag": null, "stock": 4.0, "rang": 4}, {"code": "96058796", "nom": "Aspi Eau Poussiere 25l Dexter", "ca_nat": 26704.0, "prog_nat": null, "ca_mag": 180.0, "prog_mag": null, "stock": 7.0, "rang": 5}, {"code": "5631287", "nom": "Plaque Platre Ba13 nf 250x120", "ca_nat": 24369.0, "prog_nat": 119.0, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 6}, {"code": "87651752", "nom": "Nettoyeur hp St3 150 Bars", "ca_nat": 19948.0, "prog_nat": 275.6, "ca_mag": 100.0, "prog_mag": -25.5, "stock": 5.0, "rang": 7}, {"code": "86360427", "nom": "Etagere Metal Bois 90x180x40", "ca_nat": 19491.0, "prog_nat": 108.4, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 8}, {"code": "94612186", "nom": "Mortier Montage 25+5kg", "ca_nat": 18144.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 9}, {"code": "5597051", "nom": "Escabeau 5 Marches Selekta", "ca_nat": 15740.0, "prog_nat": 117.0, "ca_mag": 119.0, "prog_mag": 166.6, "stock": 3.0, "rang": 10}, {"code": "98586931", "nom": "Psf+meuleuse Essential 1x4ah", "ca_nat": 14930.0, "prog_nat": null, "ca_mag": 100.0, "prog_mag": null, "stock": 3.0, "rang": 11}, {"code": "93179702", "nom": "Coffre Resine Ashwood 570l", "ca_nat": 13361.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 12}, {"code": "87928058", "nom": "Reglette Led 2xt8 3600lm Ip65", "ca_nat": 13129.0, "prog_nat": 130.1, "ca_mag": 119.0, "prog_mag": -49.2, "stock": 29.0, "rang": 13}, {"code": "91294483", "nom": "Radiateur in Se Tectonia 1000w", "ca_nat": 13125.0, "prog_nat": 76.2, "ca_mag": 194.0, "prog_mag": null, "stock": 1.0, "rang": 14}, {"code": "91294484", "nom": "Radiateur in Se Tectonia 1500w", "ca_nat": 12726.0, "prog_nat": 30.4, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 15}, {"code": "91294485", "nom": "Radiateur in Se Tectonia 2000w", "ca_nat": 12490.0, "prog_nat": 103.9, "ca_mag": 0.0, "prog_mag": null, "stock": 1.0, "rang": 16}, {"code": "93840028", "nom": "Ponceuse Excent 420w Dexter", "ca_nat": 12176.0, "prog_nat": null, "ca_mag": 66.0, "prog_mag": null, "stock": 1.0, "rang": 17}, {"code": "1086606", "nom": "Echafaudage Alu Hobbys Step 4m", "ca_nat": 11976.0, "prog_nat": 253.0, "ca_mag": 139.0, "prog_mag": null, "stock": null, "rang": 18}, {"code": "95332113", "nom": "Enr Brico 25m 3g1,5 Ho5-vvf", "ca_nat": 10283.0, "prog_nat": null, "ca_mag": 58.0, "prog_mag": null, "stock": 4.0, "rang": 19}, {"code": "90544248", "nom": "Kit Chasse Eau Cable 3/8", "ca_nat": 10191.0, "prog_nat": 72.5, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 20}, {"code": "82945688", "nom": "Deshumidificateur 10l/jour Eq", "ca_nat": 10190.0, "prog_nat": 98.2, "ca_mag": 0.0, "prog_mag": null, "stock": 7.0, "rang": 21}, {"code": "5604243", "nom": "Vmc Auto Luna 2018 Kit", "ca_nat": 8732.0, "prog_nat": 127.8, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 22}, {"code": "98302087", "nom": "Peint Ripolin Mat 12l ed Spec", "ca_nat": 8731.0, "prog_nat": null, "ca_mag": 107.0, "prog_mag": null, "stock": 4.0, "rang": 23}, {"code": "87210006", "nom": "Secateur 4v 20mm Avec Batterie", "ca_nat": 7896.0, "prog_nat": 437.1, "ca_mag": 199.0, "prog_mag": null, "stock": 8.0, "rang": 24}, {"code": "85372762", "nom": "Lambris Sapn Natl 9x115x2050", "ca_nat": 7817.0, "prog_nat": 29.1, "ca_mag": 0.0, "prog_mag": null, "stock": 22.0, "rang": 25}, {"code": "95870027", "nom": "Radiateur in S Walter2 1000w H", "ca_nat": 7235.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 26}, {"code": "5621274", "nom": "Laine Verre 1m2x200 Th40kr R5m", "ca_nat": 6499.0, "prog_nat": 21.9, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 27}, {"code": "86154215", "nom": "Rideau T/o Ragnar 140x280 Ecru", "ca_nat": 6369.0, "prog_nat": 705.8, "ca_mag": 119.0, "prog_mag": null, "stock": null, "rang": 28}, {"code": "9146787", "nom": "Buchette Filet 40 Litres", "ca_nat": 6337.0, "prog_nat": 55.0, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 29}, {"code": "5601125", "nom": "Isolt Bulle Pte Garage 6m2 Kit", "ca_nat": 6214.0, "prog_nat": 82.4, "ca_mag": 0.0, "prog_mag": null, "stock": 10.0, "rang": 30}, {"code": "84584111", "nom": "Bache Multifonct Mat Bleu 4x5m", "ca_nat": 5711.0, "prog_nat": 106.9, "ca_mag": 50.0, "prog_mag": null, "stock": 28.0, "rang": 31}, {"code": "96886439", "nom": "Rad Bain Huile Blc 2500w Eq", "ca_nat": 5529.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 4.0, "rang": 32}, {"code": "84621093", "nom": "Colle Joint Flexpro Blc 300ml", "ca_nat": 5155.0, "prog_nat": 113.5, "ca_mag": 33.0, "prog_mag": null, "stock": -2.0, "rang": 33}, {"code": "1091964", "nom": "Laine Verre pv 8,5x1,20-100mm", "ca_nat": 5148.0, "prog_nat": 33.2, "ca_mag": 42.0, "prog_mag": null, "stock": 8.0, "rang": 34}, {"code": "82816733", "nom": "Vide Cendre 1000w 20l", "ca_nat": 5142.0, "prog_nat": 431.2, "ca_mag": 60.0, "prog_mag": null, "stock": 5.0, "rang": 35}, {"code": "92220950", "nom": "Scie Sauteuse Filaire dx 500 W", "ca_nat": 4968.0, "prog_nat": 98.4, "ca_mag": 0.0, "prog_mag": null, "stock": 6.0, "rang": 36}, {"code": "5625668", "nom": "Bac /pin/rou Kit Mur/plf", "ca_nat": 4805.0, "prog_nat": 56.2, "ca_mag": 19.0, "prog_mag": -44.0, "stock": 12.0, "rang": 37}, {"code": "95554055", "nom": "Buche Calorifique Bois X5", "ca_nat": 4716.0, "prog_nat": 2266.6, "ca_mag": 19.0, "prog_mag": null, "stock": 283.0, "rang": 38}, {"code": "89954133", "nom": "Tube Led T8 120cm 1800lm 4000k", "ca_nat": 4610.0, "prog_nat": -8.9, "ca_mag": 59.0, "prog_mag": 471.0, "stock": 19.0, "rang": 39}, {"code": "93210317", "nom": "Perceuse Percu 900w +access Dx", "ca_nat": 4609.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 3.0, "rang": 40}, {"code": "86154213", "nom": "Rideau T/o Ragnar 140x280 Tpe", "ca_nat": 4386.0, "prog_nat": 416.5, "ca_mag": 0.0, "prog_mag": null, "stock": 1.0, "rang": 41}, {"code": "95601766", "nom": "Enduit Reno Pate 25kg+10%gr", "ca_nat": 4342.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 42}, {"code": "96232238", "nom": "Detecteur de Fumee 1an Kidde", "ca_nat": 4211.0, "prog_nat": null, "ca_mag": 17.0, "prog_mag": null, "stock": 6.0, "rang": 43}, {"code": "92875061", "nom": "Souffleur ss Bat Essential 20v", "ca_nat": 4131.0, "prog_nat": 257.5, "ca_mag": 0.0, "prog_mag": null, "stock": 4.0, "rang": 44}, {"code": "92922944", "nom": "Tronconneuse ss Bat Estl 25cm", "ca_nat": 3874.0, "prog_nat": 225.8, "ca_mag": 79.0, "prog_mag": null, "stock": 3.0, "rang": 45}, {"code": "5630026", "nom": "Bloc Parafoudre 5p+inter 3m Nr", "ca_nat": 3730.0, "prog_nat": 43.8, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 46}, {"code": "8018606", "nom": "Coffre Rgt Baya 420l 1173x548x", "ca_nat": 3567.0, "prog_nat": 615.5, "ca_mag": 0.0, "prog_mag": null, "stock": 6.0, "rang": 47}, {"code": "92908340", "nom": "Batterie wx 4ah +charg Wa3604j", "ca_nat": 3478.0, "prog_nat": 424.1, "ca_mag": 0.0, "prog_mag": null, "stock": 1.0, "rang": 48}, {"code": "96886449", "nom": "Rad Bain Huile 2000w Basic Blc", "ca_nat": 3345.0, "prog_nat": null, "ca_mag": 51.0, "prog_mag": null, "stock": 5.0, "rang": 49}, {"code": "1075840", "nom": "Gazon Universel Sac 10kg", "ca_nat": 3325.0, "prog_nat": 72.9, "ca_mag": 70.0, "prog_mag": null, "stock": 1.0, "rang": 50}], "Waldighoffen": [{"code": "94612187", "nom": "Beton Carbone Reduit 25+5kg", "ca_nat": 35421.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 1}, {"code": "5649478", "nom": "Terreau Universel Geolia 50l", "ca_nat": 34745.0, "prog_nat": 92.1, "ca_mag": 140.0, "prog_mag": -71.6, "stock": 432.0, "rang": 2}, {"code": "87909637", "nom": "Str Int 10mm wr Orito2 1,74", "ca_nat": 34236.0, "prog_nat": 642.9, "ca_mag": 766.0, "prog_mag": null, "stock": 15.0, "rang": 3}, {"code": "5594347", "nom": "Poele Petrole Electroni 2,85kw", "ca_nat": 31770.0, "prog_nat": 189.5, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 4}, {"code": "96058796", "nom": "Aspi Eau Poussiere 25l Dexter", "ca_nat": 26704.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 7.0, "rang": 5}, {"code": "5631287", "nom": "Plaque Platre Ba13 nf 250x120", "ca_nat": 24369.0, "prog_nat": 119.0, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 6}, {"code": "87651752", "nom": "Nettoyeur hp St3 150 Bars", "ca_nat": 19948.0, "prog_nat": 275.6, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 7}, {"code": "86360427", "nom": "Etagere Metal Bois 90x180x40", "ca_nat": 19491.0, "prog_nat": 108.4, "ca_mag": 80.0, "prog_mag": -20.0, "stock": 5.0, "rang": 8}, {"code": "94612186", "nom": "Mortier Montage 25+5kg", "ca_nat": 18144.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 9}, {"code": "5597051", "nom": "Escabeau 5 Marches Selekta", "ca_nat": 15740.0, "prog_nat": 117.0, "ca_mag": 79.0, "prog_mag": null, "stock": 8.0, "rang": 10}, {"code": "98586931", "nom": "Psf+meuleuse Essential 1x4ah", "ca_nat": 14930.0, "prog_nat": null, "ca_mag": 100.0, "prog_mag": null, "stock": 3.0, "rang": 11}, {"code": "93179702", "nom": "Coffre Resine Ashwood 570l", "ca_nat": 13361.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 12}, {"code": "87928058", "nom": "Reglette Led 2xt8 3600lm Ip65", "ca_nat": 13129.0, "prog_nat": 130.1, "ca_mag": 29.0, "prog_mag": -75.0, "stock": 7.0, "rang": 13}, {"code": "91294483", "nom": "Radiateur in Se Tectonia 1000w", "ca_nat": 13125.0, "prog_nat": 76.2, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 14}, {"code": "91294484", "nom": "Radiateur in Se Tectonia 1500w", "ca_nat": 12726.0, "prog_nat": 30.4, "ca_mag": 0.0, "prog_mag": null, "stock": 1.0, "rang": 15}, {"code": "91294485", "nom": "Radiateur in Se Tectonia 2000w", "ca_nat": 12490.0, "prog_nat": 103.9, "ca_mag": 0.0, "prog_mag": null, "stock": 1.0, "rang": 16}, {"code": "93840028", "nom": "Ponceuse Excent 420w Dexter", "ca_nat": 12176.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 7.0, "rang": 17}, {"code": "1086606", "nom": "Echafaudage Alu Hobbys Step 4m", "ca_nat": 11976.0, "prog_nat": 253.0, "ca_mag": 333.0, "prog_mag": null, "stock": 1.0, "rang": 18}, {"code": "95332113", "nom": "Enr Brico 25m 3g1,5 Ho5-vvf", "ca_nat": 10283.0, "prog_nat": null, "ca_mag": 89.0, "prog_mag": null, "stock": 2.0, "rang": 19}, {"code": "90544248", "nom": "Kit Chasse Eau Cable 3/8", "ca_nat": 10191.0, "prog_nat": 72.5, "ca_mag": 29.0, "prog_mag": -21.3, "stock": 4.0, "rang": 20}, {"code": "82945688", "nom": "Deshumidificateur 10l/jour Eq", "ca_nat": 10190.0, "prog_nat": 98.2, "ca_mag": 0.0, "prog_mag": null, "stock": 5.0, "rang": 21}, {"code": "5604243", "nom": "Vmc Auto Luna 2018 Kit", "ca_nat": 8732.0, "prog_nat": 127.8, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 22}, {"code": "98302087", "nom": "Peint Ripolin Mat 12l ed Spec", "ca_nat": 8731.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 23}, {"code": "87210006", "nom": "Secateur 4v 20mm Avec Batterie", "ca_nat": 7896.0, "prog_nat": 437.1, "ca_mag": 50.0, "prog_mag": null, "stock": 14.0, "rang": 24}, {"code": "85372762", "nom": "Lambris Sapn Natl 9x115x2050", "ca_nat": 7817.0, "prog_nat": 29.1, "ca_mag": 0.0, "prog_mag": null, "stock": 6.0, "rang": 25}, {"code": "95870027", "nom": "Radiateur in S Walter2 1000w H", "ca_nat": 7235.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 2.0, "rang": 26}, {"code": "5621274", "nom": "Laine Verre 1m2x200 Th40kr R5m", "ca_nat": 6499.0, "prog_nat": 21.9, "ca_mag": 95.0, "prog_mag": null, "stock": 18.0, "rang": 27}, {"code": "86154215", "nom": "Rideau T/o Ragnar 140x280 Ecru", "ca_nat": 6369.0, "prog_nat": 705.8, "ca_mag": 0.0, "prog_mag": null, "stock": 5.0, "rang": 28}, {"code": "9146787", "nom": "Buchette Filet 40 Litres", "ca_nat": 6337.0, "prog_nat": 55.0, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 29}, {"code": "5601125", "nom": "Isolt Bulle Pte Garage 6m2 Kit", "ca_nat": 6214.0, "prog_nat": 82.4, "ca_mag": 20.0, "prog_mag": null, "stock": 11.0, "rang": 30}, {"code": "84584111", "nom": "Bache Multifonct Mat Bleu 4x5m", "ca_nat": 5711.0, "prog_nat": 106.9, "ca_mag": 42.0, "prog_mag": null, "stock": 15.0, "rang": 31}, {"code": "96886439", "nom": "Rad Bain Huile Blc 2500w Eq", "ca_nat": 5529.0, "prog_nat": null, "ca_mag": 110.0, "prog_mag": null, "stock": 5.0, "rang": 32}, {"code": "84621093", "nom": "Colle Joint Flexpro Blc 300ml", "ca_nat": 5155.0, "prog_nat": 113.5, "ca_mag": 7.0, "prog_mag": -38.1, "stock": 4.0, "rang": 33}, {"code": "1091964", "nom": "Laine Verre pv 8,5x1,20-100mm", "ca_nat": 5148.0, "prog_nat": 33.2, "ca_mag": 0.0, "prog_mag": null, "stock": 18.0, "rang": 34}, {"code": "82816733", "nom": "Vide Cendre 1000w 20l", "ca_nat": 5142.0, "prog_nat": 431.2, "ca_mag": 0.0, "prog_mag": null, "stock": 1.0, "rang": 35}, {"code": "92220950", "nom": "Scie Sauteuse Filaire dx 500 W", "ca_nat": 4968.0, "prog_nat": 98.4, "ca_mag": 39.0, "prog_mag": null, "stock": 2.0, "rang": 36}, {"code": "5625668", "nom": "Bac /pin/rou Kit Mur/plf", "ca_nat": 4805.0, "prog_nat": 56.2, "ca_mag": 49.0, "prog_mag": null, "stock": 3.0, "rang": 37}, {"code": "95554055", "nom": "Buche Calorifique Bois X5", "ca_nat": 4716.0, "prog_nat": 2266.6, "ca_mag": 51.0, "prog_mag": null, "stock": 175.0, "rang": 38}, {"code": "89954133", "nom": "Tube Led T8 120cm 1800lm 4000k", "ca_nat": 4610.0, "prog_nat": -8.9, "ca_mag": 85.0, "prog_mag": -66.0, "stock": 44.0, "rang": 39}, {"code": "93210317", "nom": "Perceuse Percu 900w +access Dx", "ca_nat": 4609.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 5.0, "rang": 40}, {"code": "86154213", "nom": "Rideau T/o Ragnar 140x280 Tpe", "ca_nat": 4386.0, "prog_nat": 416.5, "ca_mag": 0.0, "prog_mag": null, "stock": 5.0, "rang": 41}, {"code": "95601766", "nom": "Enduit Reno Pate 25kg+10%gr", "ca_nat": 4342.0, "prog_nat": null, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 42}, {"code": "96232238", "nom": "Detecteur de Fumee 1an Kidde", "ca_nat": 4211.0, "prog_nat": null, "ca_mag": 5.0, "prog_mag": null, "stock": 1.0, "rang": 43}, {"code": "92875061", "nom": "Souffleur ss Bat Essential 20v", "ca_nat": 4131.0, "prog_nat": 257.5, "ca_mag": 0.0, "prog_mag": null, "stock": 3.0, "rang": 44}, {"code": "92922944", "nom": "Tronconneuse ss Bat Estl 25cm", "ca_nat": 3874.0, "prog_nat": 225.8, "ca_mag": 75.0, "prog_mag": null, "stock": 9.0, "rang": 45}, {"code": "5630026", "nom": "Bloc Parafoudre 5p+inter 3m Nr", "ca_nat": 3730.0, "prog_nat": 43.8, "ca_mag": 47.0, "prog_mag": 203.2, "stock": 26.0, "rang": 46}, {"code": "8018606", "nom": "Coffre Rgt Baya 420l 1173x548x", "ca_nat": 3567.0, "prog_nat": 615.5, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 47}, {"code": "92908340", "nom": "Batterie wx 4ah +charg Wa3604j", "ca_nat": 3478.0, "prog_nat": 424.1, "ca_mag": 0.0, "prog_mag": null, "stock": 0.0, "rang": 48}, {"code": "96886449", "nom": "Rad Bain Huile 2000w Basic Blc", "ca_nat": 3345.0, "prog_nat": null, "ca_mag": 102.0, "prog_mag": null, "stock": 10.0, "rang": 49}, {"code": "1075840", "nom": "Gazon Universel Sac 10kg", "ca_nat": 3325.0, "prog_nat": 72.9, "ca_mag": 279.0, "prog_mag": null, "stock": 1.0, "rang": 50}]};
+const SEUIL = 168.3;
+const NAT_PROG = 168.3;
+const MAG_PROG = {"Hesingue":102.1, "Sierentz":195.4, "Waldighoffen":90.1};
+const MAG_CA = {"Hesingue":2482, "Sierentz":2920, "Waldighoffen":3625};
+const NAT_CA = 721223;
+
+// colonnes : clé, libellé, type
+const COLS = [
+  {k:"priorite", t:"Priorité"},
+  {k:"rang", t:"Rang nat."},
+  {k:"code", t:"Code"},
+  {k:"nom", t:"Produit"},
+  {k:"ca_nat", t:"CA nat. (€)"},
+  {k:"ca_mag", t:"CA mag. (€)"},
+  {k:"stock", t:"Stock"},
+  {k:"situation", t:"Situation"},
+  {k:"prog_mag", t:"Prog mag."},
+  {k:"prog_nat", t:"Prog nat."},
+];
+
+// niveau de gravité : 4 rupture, 3.7 stock faible, 3.5 mise en avant,
+// 2.5/2 mauvaise perf, 1 sous national, 0.7 nouveauté, 0.5 conforme
+function evaluate(d){
+  const stock = d.stock;              // peut être 0 (rupture), un nombre, ou null (inconnu)
+  let sev, badge, bcls, situation;
+  const prog = d.prog_mag;         // progression magasin sur la réf
+  const progNat = d.prog_nat;      // progression NATIONALE de la même réf
+  const ca = d.ca_mag;
+  const novente = (ca===0) || (ca===null && prog===null);
+  // seuil de tendance = progression nationale DU produit (pas un seuil global)
+  const seuilRef = (progNat===null) ? SEUIL : progNat;
+  // stock connu = number ; inconnu = null. Rupture/stock faible seulement si stock connu.
+  const stockConnu = (typeof stock === "number");
+  if(stockConnu && stock===0){ sev=4; badge="Rupture"; bcls="b-r"; situation="Stock 0 — rupture"; }
+  else if(stockConnu && stock<3){ sev=3.7; badge="Stock faible"; bcls="b-f"; situation="Stock < 3 — à réappro"; }
+  else if(novente){ sev=3.5; badge="Mise en avant à contrôler"; bcls="b-i"; situation="Aucune vente / stock dispo"; }
+  else if(prog!==null && prog<0){ sev = prog<=-50?2.5:2; badge="Mauvaise performance"; bcls="b-e"; situation="En recul vs N-1"; }
+  else if(prog!==null && prog>=seuilRef){ sev=0.5; badge="Prog conforme"; bcls="b-c"; situation="≥ national du produit"; }
+  else if(prog!==null){ sev=1; badge="À suivre"; bcls="b-s"; situation="Sous le national du produit"; }
+  else if(ca!==null && ca>0 && prog===null){ sev=0.7; badge="Nouveauté"; bcls="b-n"; situation="Nouveauté magasin"; }
+  else { sev=0; badge=""; bcls=""; situation=""; }
+  return {sev,badge,bcls,situation};
+}
+
+let curMag = Object.keys(DATA)[0];
+let curFilter = "all";
+let sortKey = "priorite", sortDir = -1; // -1 desc
+
+function rowsFor(mag){
+  return DATA[mag].map(d=>{
+    const e = evaluate(d);
+    return {...d, sev:e.sev, badge:e.badge, bcls:e.bcls, situation:e.situation};
+  }).filter(r=>r.badge!==""); // toutes les réfs classées (50)
+}
+
+// une référence est "en alerte" si rupture / stock faible / mise en avant / mauvaise perf
+function estAlerte(sev){ return sev===4 || sev===3.7 || sev===3.5 || (sev>=2 && sev<3); }
+
+// flops groupe : références en alerte dans les 3 magasins simultanément
+function flopsGroupe(){
+  const mags = Object.keys(DATA);
+  // indexer chaque magasin par code -> ligne évaluée
+  const idx = {};
+  mags.forEach(m=>{
+    idx[m] = {};
+    rowsFor(m).forEach(r=>{ idx[m][r.code] = r; });
+  });
+  // codes présents et en alerte dans TOUS les magasins
+  const base = mags[0];
+  const out = [];
+  Object.keys(idx[base]).forEach(code=>{
+    const parMag = mags.map(m=> idx[m][code]);
+    if(parMag.every(r=> r && estAlerte(r.sev))){
+      // gravité groupe = somme des sev (plus c'est haut, plus c'est grave partout)
+      const scoreGrp = parMag.reduce((s,r)=>s+r.sev,0);
+      out.push({code, nom: idx[base][code].nom, rang: idx[base][code].rang,
+                ca_nat: idx[base][code].ca_nat, prog_nat: idx[base][code].prog_nat,
+                parMag, scoreGrp});
+    }
+  });
+  out.sort((a,b)=> b.scoreGrp - a.scoreGrp || b.ca_nat - a.ca_nat);
+  return out;
+}
+
+function fmtEuro(v){ return v==null?"":Math.round(v).toLocaleString("fr-FR")+" €"; }
+function fmtProg(v){ return v==null?"—":(v>0?"+":"")+v.toFixed(1)+"%"; }
+function fmtStock(v){ return v==null?"0":Math.round(v); }
+
+function render(){
+  const isGroupe = (curMag === "GROUPE");
+  // bandeau progression magasin vs national
+  if(isGroupe){
+    const totGrp = Object.values(MAG_CA).reduce((s,v)=>s+v,0);
+    document.getElementById("progline").innerHTML =
+      `<span class="mag">Consolidation GROUPE — flops présents dans les 3 magasins</span>`+
+      ` <span class="nat">CA total 3 magasins : ${fmtEuro(totGrp)}</span>`;
+  } else {
+    const mp = MAG_PROG[curMag];
+    const cls = mp>=NAT_PROG ? "up" : "down";
+    const signe = mp>=0?"+":"";
+    document.getElementById("progline").innerHTML =
+      `<span class="mag">${curMag} : ${fmtEuro(MAG_CA[curMag])} · <span class="${cls}">${signe}${mp.toFixed(1)} %</span></span>`+
+      ` <span class="nat">vs National ${fmtEuro(NAT_CA)} · +${NAT_PROG.toFixed(1)} %</span>`;
+  }
+  // tabs (magasins + GROUPE)
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  [...Object.keys(DATA), "GROUPE"].forEach(m=>{
+    const b=document.createElement("button");
+    b.textContent=m; if(m===curMag)b.className="active";
+    if(m==="GROUPE") b.classList.add("grp");
+    b.onclick=()=>{curMag=m;curFilter="all";render();};
+    tabs.appendChild(b);
+  });
+
+  if(isGroupe){ renderGroupe(); return; }
+
+  // head
+  const head=document.getElementById("head"); head.innerHTML="";
+  COLS.forEach(c=>{
+    const th=document.createElement("th");
+    th.innerHTML=c.t+(sortKey===c.k?' <span class="arr">'+(sortDir<0?"▼":"▲")+'</span>':' <span class="arr">↕</span>');
+    th.onclick=()=>{ if(sortKey===c.k)sortDir=-sortDir; else {sortKey=c.k;sortDir=(c.k==="nom"||c.k==="code")?1:-1;} render(); };
+    head.appendChild(th);
+  });
+  // rows
+  let allRows = rowsFor(curMag);
+  // counts (toujours calculés sur l'ensemble, pas sur le filtre)
+  const cr=allRows.filter(r=>r.sev===4).length, cf=allRows.filter(r=>r.sev===3.7).length,
+        ci=allRows.filter(r=>r.sev===3.5).length,
+        ce=allRows.filter(r=>r.sev>=2&&r.sev<3).length, cs=allRows.filter(r=>r.sev===1).length,
+        cn=allRows.filter(r=>r.sev===0.7).length,
+        cc=allRows.filter(r=>r.sev===0.5).length;
+  // définition des filtres : clé, libellé, classe, test
+  const FILTERS = [
+    {k:"all", lbl:`Tout (${allRows.length})`, cls:"all", test:()=>true},
+    {k:"r", lbl:`${cr} rupture`, cls:"r", test:r=>r.sev===4},
+    {k:"f", lbl:`${cf} stock faible`, cls:"f", test:r=>r.sev===3.7},
+    {k:"i", lbl:`${ci} mise en avant`, cls:"i", test:r=>r.sev===3.5},
+    {k:"e", lbl:`${ce} mauvaise perf.`, cls:"e", test:r=>r.sev>=2&&r.sev<3},
+    {k:"s", lbl:`${cs} sous national`, cls:"s", test:r=>r.sev===1},
+    {k:"n", lbl:`${cn} nouveauté`, cls:"n", test:r=>r.sev===0.7},
+    {k:"c", lbl:`${cc} conforme`, cls:"c", test:r=>r.sev===0.5},
+  ];
+  const cont = document.getElementById("counts"); cont.innerHTML="";
+  FILTERS.forEach(f=>{
+    const sp=document.createElement("span");
+    sp.className="pill "+f.cls+(curFilter===f.k?" on":"");
+    sp.textContent=f.lbl;
+    sp.onclick=()=>{ curFilter = (curFilter===f.k?"all":f.k); render(); };
+    cont.appendChild(sp);
+  });
+  // appliquer le filtre
+  const flt = FILTERS.find(f=>f.k===curFilter) || FILTERS[0];
+  let rows = allRows.filter(flt.test);
+  // sort
+  rows.sort((a,b)=>{
+    let x,y;
+    if(sortKey==="priorite"){ x=a.sev; y=b.sev; if(x===y){x=a.ca_nat;y=b.ca_nat;} }
+    else if(sortKey==="situation"){ x=a.sev; y=b.sev; }
+    else { x=a[sortKey]; y=b[sortKey]; }
+    if(x===null)x=-Infinity; if(y===null)y=-Infinity;
+    if(typeof x==="string") return sortDir*x.localeCompare(y);
+    return sortDir*(x-y);
+  });
+  // body
+  const body=document.getElementById("body"); body.innerHTML="";
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    const stockCls = r.sev===4?"stock r":(r.sev===3.7?"stock f":(r.sev===3.5?"stock i":"stock"));
+    const progCls = (r.prog_mag!==null&&r.prog_mag<0)?"neg":"";
+    const progNatCls = (r.prog_nat!==null&&r.prog_nat<0)?"neg":"";
+    tr.innerHTML =
+      `<td class="badge ${r.bcls}">${r.badge}</td>`+
+      `<td>${r.rang}</td>`+
+      `<td class="code" data-code="${r.code}" title="Cliquer pour copier">${r.code}</td>`+
+      `<td class="prod">${r.nom}</td>`+
+      `<td>${fmtEuro(r.ca_nat)}</td>`+
+      `<td class="camagcol">${fmtEuro(r.ca_mag)}</td>`+
+      `<td class="${stockCls}">${fmtStock(r.stock)}</td>`+
+      `<td>${r.situation}</td>`+
+      `<td class="${progCls}">${fmtProg(r.prog_mag)}</td>`+
+      `<td class="pnat ${progNatCls}">${fmtProg(r.prog_nat)}</td>`;
+    body.appendChild(tr);
+  });
+}
+render();
+
+// ===== Vue consolidée GROUPE =====
+let grpSortKey = "score", grpSortDir = -1;
+function renderGroupe(){
+  let flops = flopsGroupe();
+  const mags = Object.keys(DATA);
+  const cont = document.getElementById("counts");
+  cont.innerHTML = `<span class="pill r on">${flops.length} flop(s) commun(s) aux 3 magasins</span>`;
+  // colonnes triables : clé + libellé
+  const cols = [
+    {k:"rang", t:"Rang nat."},
+    {k:"code", t:"Code"},
+    {k:"nom", t:"Produit"},
+    {k:"ca_nat", t:"CA nat."},
+    ...mags.map((m,i)=>({k:"mag"+i, t:m}))
+  ];
+  const head=document.getElementById("head"); head.innerHTML="";
+  cols.forEach(c=>{
+    const th=document.createElement("th");
+    th.innerHTML=c.t+(grpSortKey===c.k?' <span class="arr">'+(grpSortDir<0?"▼":"▲")+'</span>':' <span class="arr">↕</span>');
+    th.onclick=()=>{ if(grpSortKey===c.k)grpSortDir=-grpSortDir; else {grpSortKey=c.k;grpSortDir=(c.k==="nom"||c.k==="code")?1:-1;} renderGroupe(); };
+    head.appendChild(th);
+  });
+  // tri
+  flops.sort((a,b)=>{
+    let x,y;
+    if(grpSortKey==="score"){ x=a.scoreGrp; y=b.scoreGrp; if(x===y){x=a.ca_nat;y=b.ca_nat;} }
+    else if(grpSortKey.startsWith("mag")){ const i=+grpSortKey.slice(3); x=a.parMag[i].sev; y=b.parMag[i].sev; }
+    else { x=a[grpSortKey]; y=b[grpSortKey]; }
+    if(x===null)x=-Infinity; if(y===null)y=-Infinity;
+    if(typeof x==="string") return grpSortDir*x.localeCompare(y);
+    return grpSortDir*(x-y);
+  });
+  const body=document.getElementById("body"); body.innerHTML="";
+  if(flops.length===0){
+    body.innerHTML = `<tr><td colspan="${cols.length}" style="padding:24px;color:#5b6b7a">Aucune référence en alerte simultanément dans les 3 magasins.</td></tr>`;
+    return;
+  }
+  flops.forEach(f=>{
+    const tr=document.createElement("tr");
+    let cells =
+      `<td>${f.rang}</td>`+
+      `<td class="code" data-code="${f.code}" title="Cliquer pour copier">${f.code}</td>`+
+      `<td class="prod">${f.nom}</td>`+
+      `<td>${fmtEuro(f.ca_nat)}</td>`;
+    f.parMag.forEach(r=>{
+      cells += `<td class="badge ${r.bcls}" title="Stock ${fmtStock(r.stock)} · Prog ${fmtProg(r.prog_mag)}">${r.badge}<br><span class="camag">${fmtEuro(r.ca_mag)}</span></td>`;
+    });
+    tr.innerHTML = cells;
+    body.appendChild(tr);
+  });
+}
+
+// clic sur un code = copie dans le presse-papiers (pour coller dans Booster)
+document.getElementById("body").addEventListener("click", function(e){
+  const td = e.target.closest("td.code");
+  if(!td) return;
+  const code = td.getAttribute("data-code");
+  const done = ()=>{
+    const old = td.getAttribute("data-code");
+    td.classList.add("copied"); td.textContent = "✓ copié";
+    setTimeout(()=>{ td.classList.remove("copied"); td.textContent = old; }, 900);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done).catch(()=>fallback(code,done));
+  } else { fallback(code,done); }
+});
+function fallback(text, cb){
+  const ta=document.createElement("textarea"); ta.value=text;
+  ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand("copy");}catch(_){} document.body.removeChild(ta); cb();
+}
+</script>
+</body>
+</html>
