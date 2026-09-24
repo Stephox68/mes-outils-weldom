@@ -69,61 +69,34 @@
   td.camagcol{font-weight:700;color:#12263a}
   td.pnat.neg{color:#c98a86;font-weight:600;font-style:italic}
   footer{padding:14px 26px;color:#8a97a3;font-size:11.5px;border-top:1px solid var(--line)}
-  @media(max-width:640px){.prod{max-width:150px}th,td{padding:5px 6px;font-size:11px}}
-  /* ===== MOBILE : tableau -> cartes empilées (sous 720px) ===== */
+  /* ===== MOBILE : meme tableau qu'en PC, fenetre figee deroulante ===== */
+  .wrap{-webkit-overflow-scrolling:touch}
   @media (max-width:720px){
     header{padding:18px 14px 14px}
     h1{font-size:22px}
     .progline{font-size:16px;line-height:1.4}
     .progline .nat{display:block;font-size:13px;margin-top:2px}
-    .controls,.wrap{padding-left:10px;padding-right:10px}
+    .controls{padding-left:10px;padding-right:10px}
     .mag-tabs{flex-wrap:wrap}
     .mag-tabs button{flex:1 1 40%;padding:10px 8px}
     .counts{gap:8px}
     .pill{font-size:12px}
-    /* masquer l'entête de tableau */
-    #tbl thead{display:none}
-    #tbl,#tbl tbody,#tbl tr,#tbl td{display:block;width:auto}
-    #tbl tr{
-      border:1px solid var(--line);border-radius:10px;margin:0 0 12px;
-      background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;
-    }
-    #tbl tr:nth-child(even) td{background:#fff}
-    /* le badge priorité en bandeau haut de carte */
-    #tbl td.badge{
-      text-align:center;font-size:13px;padding:8px 12px;border:0;
-      border-radius:0;line-height:1.3;
-    }
-    /* les autres cellules : label à gauche, valeur à droite */
-    #tbl td:not(.badge){
-      display:flex;justify-content:space-between;align-items:center;gap:12px;
-      text-align:right;border:0;border-top:1px solid #eee;padding:8px 12px;font-size:13px;
-    }
-    #tbl td:not(.badge)::before{
-      content:attr(data-label);color:#5b6b7a;font-weight:600;text-align:left;
-      font-size:12px;text-transform:none;letter-spacing:0;flex:0 0 auto;
-    }
-    #tbl td.prod{font-weight:600}
-    /* cellules badge de la vue GROUPE : label magasin à gauche, badge coloré à droite */
-    #tbl td.grpcell{
-      display:flex;justify-content:space-between;align-items:center;gap:12px;
-      color:#12263a;background:#fff !important;border-top:1px solid #eee;
-      padding:8px 12px;text-transform:none;font-size:12px;
-    }
-    #tbl td.grpcell::before{
-      content:attr(data-label);color:#5b6b7a;font-weight:600;font-size:12px;flex:0 0 auto;
-    }
-    #tbl td.grpcell.b-r{border-left:5px solid var(--rupture)}
-    #tbl td.grpcell.b-f{border-left:5px solid var(--faible)}
-    #tbl td.grpcell.b-i{border-left:5px solid var(--impl)}
-    #tbl td.grpcell.b-e{border-left:5px solid var(--recul)}
-    #tbl td.grpcell .camag{font-weight:700;color:#12263a}
-    #tbl td.code{text-decoration:underline;text-decoration-style:dotted}
-    /* stock coloré : garde le fond mais en pastille compacte */
-    #tbl td.stock.r,#tbl td.stock.f,#tbl td.stock.i{color:inherit;background:#fff;font-weight:700}
-    #tbl td.stock.r::after,#tbl td.stock.f::after,#tbl td.stock.i::after{content:""}
-    /* footer plus compact */
+    /* fenetre de defilement : hauteur figee, entete + 1ere colonne fixes */
+    .wrap{padding:0 10px 24px;max-height:74vh;overflow:auto;border:1px solid var(--line);
+      border-radius:8px;margin-top:8px}
+    #tbl{width:max-content;min-width:100%;font-size:13px}
+    #tbl th,#tbl td{white-space:nowrap;padding:9px 10px}
+    #tbl td.prod{white-space:normal;max-width:170px}
+    #tbl th{top:0;z-index:3;font-size:11.5px}
+    /* 1ere colonne (Priorite) figee a gauche pendant le defilement horizontal */
+    #tbl th:first-child,#tbl td.badge{position:sticky;left:0;z-index:2}
+    #tbl th:first-child{z-index:4}
+    #tbl td.badge{min-width:98px}
     footer{padding:12px 14px;font-size:11px}
+  }
+  @media (max-width:640px){
+    #tbl{font-size:12.5px}
+    #tbl td.prod{max-width:140px}
   }
 </style>
 </head>
@@ -141,6 +114,7 @@
     <label>Répartition des alertes</label>
     <div class="counts" id="counts"></div>
   </div>
+
 </div>
 <div class="wrap">
   <table id="tbl">
