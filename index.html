@@ -210,6 +210,15 @@
     font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;
   }
   .row-reminder:hover { background: #FFF3D6; }
+  .row-validate {
+    background: #FBEAEA; color: #C0392B; border: 1px solid #C0392B; padding: 5px 8px; border-radius: 5px;
+    font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .row-validate.is-done {
+    background: #EAF6EC; color: #2E7D32; border: 1px solid #2E7D32;
+  }
+  tr.row-flagged { background: #FFF7EC; }
+  tr.row-flagged td:first-child { box-shadow: inset 4px 0 0 #C0392B; }
   .ics-link { display: block; text-align: center; font-size: 0.65rem; color: #8A7F68; text-decoration: underline; margin-top: 3px; cursor: pointer; }
   .ics-link:hover { color: var(--orange); }
   .row-delete { background: transparent; color: #C9A9A0; border: none; padding: 2px 6px; font-size: 0.85rem; cursor: pointer; }
@@ -266,6 +275,7 @@
     tbody td[data-label="Rappel agenda"] { flex-direction: column; align-items: stretch; }
     tbody td[data-label="Rappel agenda"]::before { text-align: left; margin-bottom: 6px; }
     .row-reminder { width: 100%; box-sizing: border-box; white-space: normal; }
+    .row-validate { width: 100%; box-sizing: border-box; }
     .ics-link { margin-top: 4px; }
   }
 </style>
@@ -401,12 +411,13 @@ function buildTable(items) {
       <th style="width:19%">Exemple de produits</th>
       <th style="width:11%">Fournisseur</th>
       <th style="width:16%">Commentaire</th>
-      <th style="width:12%">Rappel agenda</th>
+      <th style="width:9%">Fait ?</th>
+      <th style="width:11%">Rappel agenda</th>
       <th style="width:4%"></th>
     </tr></thead>`;
   const tbody = document.createElement('tbody');
 
-  function addRow(chef, theme, periode, produits, fournisseur, commentaire) {
+  function addRow(chef, theme, periode, produits, fournisseur, commentaire, valide) {
     const tr = document.createElement('tr');
     const editable = editUnlocked ? 'true' : 'false';
     tr.innerHTML = `
@@ -416,6 +427,7 @@ function buildTable(items) {
       <td data-label="Exemple de produits"><span class="locked-field" contenteditable="${editable}" data-placeholder="Produits...">${produits || ''}</span></td>
       <td data-label="Fournisseur"><span class="locked-field" contenteditable="${editable}" data-placeholder="Fournisseur...">${fournisseur || ''}</span></td>
       <td data-label="Commentaire"><span class="comment-field${commentaire ? ' field-filled' : ''}" contenteditable="true" data-placeholder="Commentaire...">${commentaire || ''}</span></td>
+      <td data-label="Fait ?"><button class="row-validate${valide ? ' is-done' : ''}" title="Marquer cette tâche comme faite" onclick="toggleValidate(this)">${valide ? '✅ Fait' : '⏳ À valider'}</button></td>
       <td data-label="Rappel agenda">
         <button class="row-reminder" title="Ouvrir un événement pré-rempli dans Google Agenda" onclick="createGoogleReminder(this)">📅 Google Agenda</button>
         <a class="ics-link" title="Autre agenda (Outlook, etc.)" onclick="createIcsReminder(this)">ou .ics</a>
@@ -423,10 +435,11 @@ function buildTable(items) {
       <td data-label=""><button class="row-delete locked-only" title="Supprimer la ligne" onclick="this.closest('tr').remove(); scheduleSave();">✕</button></td>
     `;
     tbody.appendChild(tr);
+    updateRowFlag(tr);
   }
 
-  items.forEach(([chef, theme, periode, produits, fournisseur, commentaire]) => {
-    addRow(chef, theme, periode, produits, fournisseur, commentaire);
+  items.forEach(([chef, theme, periode, produits, fournisseur, commentaire, valide]) => {
+    addRow(chef, theme, periode, produits, fournisseur, commentaire, valide);
   });
   table.appendChild(tbody);
   wrapper.appendChild(table);
@@ -504,10 +517,12 @@ function collectData() {
         el.querySelectorAll('tbody tr').forEach(tr => {
           const spans = tr.querySelectorAll('td span');
           const sel = tr.querySelector('select.periode-select');
+          const valBtn = tr.querySelector('.row-validate');
           if (spans.length === 5) {
             current.items.push([
               spans[0].innerText, spans[1].innerText, sel ? sel.value : '',
-              spans[2].innerText, spans[3].innerText, spans[4].innerText
+              spans[2].innerText, spans[3].innerText, spans[4].innerText,
+              valBtn ? valBtn.classList.contains('is-done') : false
             ]);
           }
         });
@@ -644,6 +659,20 @@ async function fetchSharedData() {
   }
 }
 
+function updateRowFlag(tr) {
+  const chef = tr.querySelector('.chef-field');
+  const validateBtn = tr.querySelector('.row-validate');
+  const hasChef = chef && chef.textContent.trim() !== '';
+  const isDone = validateBtn && validateBtn.classList.contains('is-done');
+  tr.classList.toggle('row-flagged', !!(hasChef && !isDone));
+}
+function toggleValidate(btn) {
+  const isDone = btn.classList.toggle('is-done');
+  btn.textContent = isDone ? '✅ Fait' : '⏳ À valider';
+  updateRowFlag(btn.closest('tr'));
+  scheduleSave();
+}
+
 // Save on any edit (event delegation) — debounced
 container.addEventListener('input', (e) => {
   if (e.target.matches('[contenteditable="true"]')) {
@@ -651,6 +680,7 @@ container.addEventListener('input', (e) => {
     if (e.target.matches('.chef-field')) {
       populateChefFilter();
       applyFilters();
+      updateRowFlag(e.target.closest('tr'));
     }
     scheduleSave();
   }
